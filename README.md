@@ -32,3 +32,13 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 * Implemented metadata-based file activation using the `Is_Active` flag.
 * Added an If Condition activity to dynamically control file ingestion.
 * Verified that inactive datasets are skipped without modifying the pipeline.
+
+## Sprint 3 – Azure SQL Metadata Framework
+
+### Features Implemented
+
+* Created Azure SQL Server and Azure SQL Database.
+* Designed `watermark_metadata` table for runtime metadata.
+* Configured Azure SQL Linked Service and Dataset in ADF.
+* Implemented dynamic watermark lookup using Lookup Activity.
+* Refactored the pipeline into a Parent–Child architecture using Execute Pipeline.
