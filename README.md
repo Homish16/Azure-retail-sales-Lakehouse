@@ -41,4 +41,4 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 * Designed `watermark_metadata` table for runtime metadata.
 * Configured Azure SQL Linked Service and Dataset in ADF.
 * Implemented dynamic watermark lookup using Lookup Activity.
-* Refactored the pipeline into a Parent–Child architecture using Execute Pipeline.
+* Refactored the pipeline into a Parent–Child architecture using Execute Pipeline activity.
