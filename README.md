@@ -35,11 +35,15 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
   * Copy Activity
 * Successfully ingested Bronze CSV files into the Silver layer as Parquet files.
 
+  
+
 ### Sprint 2 - Pipeline Control ✅
 
 * Implemented metadata-based file activation using the `Is_Active` flag.
 * Added an If Condition activity to dynamically control file ingestion.
 * Verified that inactive datasets are skipped without modifying the pipeline.
+
+  
 
 ## Sprint 3 – Azure SQL Metadata Framework
 
