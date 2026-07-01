@@ -23,6 +23,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 | Sprint 5 – Silver → Gold Transformation | ⬜ Planned |
 | Sprint 6 – Data Serving & Optimization | ⬜ Planned |
 
+
 ## Sprint 1 - Metadata-Driven Ingestion ✅
 
 * Created Azure Data Lake Storage Gen2 with Bronze, Silver, and Gold containers.
@@ -96,9 +97,10 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 | Bronze | 5000 |
 | Silver | 5000 |
 
-✅ No data loss during transformation.
+✅ No data loss during transformation. 
 
-📦## Products Bronze → Silver
+
+## Products Bronze → Silver
 
 - Read product data from Bronze layer (CSV)
 - Applied explicit DDL schema
@@ -132,7 +134,7 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 ✅ No data loss during transformation.
 
 
-🏪 ## Stores Bronze → Silver
+ ## Stores Bronze → Silver
 - Read store data from Bronze layer (CSV)
 - Applied explicit DDL schema
 - Performed data profiling
