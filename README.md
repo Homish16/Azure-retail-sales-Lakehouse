@@ -109,9 +109,10 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 
 ## Sprint 4 Progression
 
+
 Sprint 4
 
-├── Customers Bronze → Silver ✅
-├── Products Bronze → Silver ⬜
-├── Stores Bronze → Silver ⬜
-└── Sales Bronze → Silver ⬜
+✅ Customers: Bronze -> Silver
+✅ Products: Bronze -> Silver
+✅ Stores: Bronze -> Silver
+🚧 Sales
