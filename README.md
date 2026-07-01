@@ -23,7 +23,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 | Sprint 5 – Silver → Gold Transformation | ⬜ Planned |
 | Sprint 6 – Data Serving & Optimization | ⬜ Planned |
 
-### Sprint 1 - Metadata-Driven Ingestion ✅
+## Sprint 1 - Metadata-Driven Ingestion ✅
 
 * Created Azure Data Lake Storage Gen2 with Bronze, Silver, and Gold containers.
 * Designed a realistic retail sales dataset consisting of Customers, Products, Stores, Sales, and a metadata configuration file.
@@ -37,7 +37,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 
   
 
-### Sprint 2 - Pipeline Control ✅
+## Sprint 2 - Pipeline Control ✅
 
 * Implemented metadata-based file activation using the `Is_Active` flag.
 * Added an If Condition activity to dynamically control file ingestion.
@@ -98,6 +98,72 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 
 ✅ No data loss during transformation.
 
+📦## Products Bronze → Silver
+
+- Read product data from Bronze layer (CSV)
+- Applied explicit DDL schema
+- Performed data profiling
+    - Row Count
+    - Null Value Analysis
+    - Duplicate Record Analysis
+- Implemented business rule validations
+    - Product_ID should not be NULL
+    - Product_ID should be unique
+    - Product_Name should not be NULL
+    - Product_Category should not be NULL
+    - Product_SubCategory should not be NULL
+    - Product_Brand should not be NULL
+    - Product_Price should be greater than 0
+    - Product_Unit should not be NULL
+    - Product_Launch_Date should not be in the future
+- Applied data standardization
+    - Trimmed whitespace from text columns
+- Wrote cleansed data to Silver layer in Parquet format
+- Read Silver dataset back for validation
+- Verified row counts
+
+### Validation Summary
+
+| Layer | Row Count |
+|--------|----------:|
+| Bronze | 1000 |
+| Silver | 1000 |
+
+✅ No data loss during transformation.
+
+
+🏪 ## Stores Bronze → Silver
+- Read store data from Bronze layer (CSV)
+- Applied explicit DDL schema
+- Performed data profiling
+    - Row Count
+    - Null Value Analysis
+    - Duplicate Record Analysis
+- Implemented business rule validations
+    - Store_ID should not be NULL
+    - Store_ID should be unique
+    - Store_Name should not be NULL
+    - Country should not be NULL
+    - State should not be NULL
+    - City should not be NULL
+    - Store_Type should not be NULL
+    - Employee_Count should be greater than 0
+    - Opening_Date should not be in the future
+- Applied data standardization
+    - Trimmed whitespace from text columns
+- Wrote cleansed data to Silver layer in Parquet format
+- Read Silver dataset back for validation
+- Verified row counts
+
+### Validation Summary
+
+| Layer | Row Count |
+|--------|----------:|
+| Bronze | 100 |
+| Silver | 100 |
+
+✅ No data loss during transformation.
+
 
 ## Technologies Used
 
@@ -111,12 +177,4 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 
   
 
-## Sprint 4 Progression
 
-
-Sprint 4
-
-✅ Customers: Bronze -> Silver
-✅ Products: Bronze -> Silver
-✅ Stores: Bronze -> Silver
-🚧 Sales
