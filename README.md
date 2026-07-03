@@ -2,6 +2,12 @@
 
 End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse using Azure Data Factory, Azure Data Lake Storage Gen2 (ADLS Gen2), Azure Databricks, PySpark, and SQL. The project features a metadata-driven ingestion framework based on the Medallion Architecture (Bronze, Silver, Gold).
 
+# Project Architecture
+<p align="center">
+  <img src="architecture/retail_sales_lakehouse_architecture.png" alt="Azure Retail Sales Lakehouse Architecture" width="1000"/>
+</p>
+
+
 
 ## 🛠️ Tech Stack
 
