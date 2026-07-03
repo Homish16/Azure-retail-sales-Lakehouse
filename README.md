@@ -231,13 +231,51 @@ Created derived business columns:
 - Cleaned dataset written to Silver layer in Parquet format
 - Post-write validation performed by comparing row counts and verifying sample records
 
+- ## Sprint 4 Completion – Bronze to Silver Layer
+
+Completed the Bronze to Silver implementation for all four datasets (Customers, Products, Stores, and Sales).
+
+### Sales Bronze → Silver Pipeline
+
+Implemented the complete Sales transformation pipeline using Azure Databricks and PySpark.
+
+#### Data Processing
+
+- Read Sales data from Bronze layer
+- Applied explicit schema
+- Performed data profiling
+- Duplicate record analysis
+- Mandatory field validation
+- Numeric validation
+- Date validation
+- Customer referential integrity validation
+- Product referential integrity validation
+- Store referential integrity validation
+- Business enrichment
+  - Gross_Price
+  - Final_Price
+- Domain validation
+- Wrote cleansed data to Silver layer in Parquet format
+- Performed post-write validation
+
+### Project Documentation
+
+- Added Bronze to Silver notebooks to GitHub
+- Created project architecture diagram using draw.io
+- Embedded architecture diagram in README
+- Improved notebook documentation and markdown structure
+- Cleaned notebook by removing unnecessary debugging cells
+
+### Current Project Status
+
+- ✅ Metadata-Driven Ingestion
+- ✅ Bronze Layer
+- ✅ Silver Layer
+- ⏳ Gold Layer (Next Sprint)
+
 ### Technologies
 
 - Azure Databricks
 - PySpark
 - Azure Data Lake Storage Gen2
 - Parquet
-
-  
-
-
