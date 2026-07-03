@@ -6,7 +6,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 # Project Architecture
 
 <p align="center">
-  <img src="Architecture/lakehouse_architecture.drawio.png" alt="Architecture" width="1000"/>
+  <img src="Architecture/lakehouse_architecture.drawio.png" alt="Architecture" width="900"/>
 </p>
 
 ## 🛠️ Tech Stack
