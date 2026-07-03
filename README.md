@@ -19,7 +19,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 | Sprint 1 – Metadata Driven Ingestion | ✅ Completed |
 | Sprint 2 – Incremental Loading | ✅ Completed |
 | Sprint 3 – Metadata & Watermark Framework | ✅ Completed |
-| Sprint 4 – Bronze → Silver Transformation | 🚧 In Progress |
+| Sprint 4 – Bronze → Silver Transformation | ✅ Completed |
 | Sprint 5 – Silver → Gold Transformation | ⬜ Planned |
 | Sprint 6 – Data Serving & Optimization | ⬜ Planned |
 
@@ -176,6 +176,60 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 - Parquet
 - Azure Managed Identity
 - External Locations
+
+- ## Sales Bronze to Silver Transformation
+
+Implemented the complete Sales Bronze to Silver ETL pipeline using Azure Databricks and PySpark.
+
+### Key Features
+
+- Read Sales data from Bronze layer (CSV)
+- Applied explicit schema for data consistency
+- Performed data profiling
+  - Record count
+  - Null value analysis
+  - Duplicate analysis
+
+### Data Quality Validations
+
+- Duplicate record removal
+- Mandatory field validation
+- Numeric validation
+  - Quantity > 0
+  - Unit Price > 0
+  - Discount Amount ≥ 0
+- Date validation
+  - Sale_DateTime should not be in the future
+- Domain validation
+  - Payment Method
+  - Order Status
+
+### Referential Integrity
+
+Validated Sales records against Silver master datasets using PySpark joins:
+
+- Customer validation
+- Product validation
+- Store validation
+
+### Business Enrichment
+
+Created derived business columns:
+
+- Gross_Price = Quantity × Unit_Price
+- Final_Price = Gross_Price − Discount_Amount
+
+### Output
+
+- Cleaned dataset written to Silver layer in Parquet format
+- Post-write validation performed by comparing row counts and verifying sample records
+
+### Technologies
+
+- Azure Databricks
+- PySpark
+- Azure Data Lake Storage Gen2
+- Parquet
 
   
 
