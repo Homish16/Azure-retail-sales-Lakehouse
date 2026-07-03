@@ -2,6 +2,12 @@
 
 End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse using Azure Data Factory, Azure Data Lake Storage Gen2 (ADLS Gen2), Azure Databricks, PySpark, and SQL. The project features a metadata-driven ingestion framework based on the Medallion Architecture (Bronze, Silver, Gold).
 
+## Architecture
+
+<p align="center">
+  <img src="architecture/architecture.png" width="900">
+</p>
+
 ## 🛠️ Tech Stack
 
 * **Cloud Platform:** Microsoft Azure
@@ -177,7 +183,7 @@ Transform raw Bronze datasets into clean, validated and analytics-ready Silver d
 - Azure Managed Identity
 - External Locations
 
-- ## Sales Bronze to Silver Transformation
+- ## Sales Bronze -> Silver 
 
 Implemented the complete Sales Bronze to Silver ETL pipeline using Azure Databricks and PySpark.
 
