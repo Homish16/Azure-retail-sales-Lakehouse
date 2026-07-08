@@ -279,3 +279,53 @@ Implemented the complete Sales transformation pipeline using Azure Databricks an
 - PySpark
 - Azure Data Lake Storage Gen2
 - Parquet
+
+## Sprint 5 – Gold Layer Development (Part 1): Date Dimension
+
+### Objective
+Started the Gold Layer implementation by building the Date Dimension (`dim_date`) from the Silver Sales dataset. The objective was to create a reusable calendar dimension for analytical reporting and Power BI dashboards.
+
+### Tasks Completed
+
+- Created notebook: `05-Date-Dimension-Silver-to-Gold`
+- Read Sales data from Silver Layer (Parquet).
+- Calculated minimum and maximum sales dates using aggregate functions.
+- Generated a complete calendar using:
+  - `sequence()`
+  - `explode()`
+- Built the Date Dimension with the following attributes:
+  - Date
+  - Date_Key (YYYYMMDD)
+  - Year
+  - Quarter
+  - Month_Number
+  - Month_Name
+  - Week_Number
+  - Day_Number
+  - Day_Name
+  - Is_Weekend
+- Applied business logic to identify weekends.
+- Performed data quality validation:
+  - Row Count
+  - Null Check
+  - Duplicate Check
+  - Schema Validation
+- Successfully wrote the Date Dimension to the Gold Layer and validated the output.
+
+### Key Learnings
+
+- Difference between Spark DataFrames, Row objects and Python objects.
+- Practical usage of:
+  - `sequence()`
+  - `explode()`
+  - `date_format()`
+  - `year()`
+  - `quarter()`
+  - `month()`
+  - `weekofyear()`
+  - `dayofmonth()`
+  - `dayofweek()`
+  - `when()` / `otherwise()`
+- Understood why Date Dimensions are essential in dimensional modeling.
+- Learned that Spark DataFrames are immutable while Python variables can be reassigned to newer DataFrame references.
+- Discussed enterprise coding practices such as maintaining a single DataFrame variable through chained transformations.
