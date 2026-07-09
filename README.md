@@ -329,3 +329,10 @@ Started the Gold Layer implementation by building the Date Dimension (`dim_date`
 - Understood why Date Dimensions are essential in dimensional modeling.
 - Learned that Spark DataFrames are immutable while Python variables can be reassigned to newer DataFrame references.
 - Discussed enterprise coding practices such as maintaining a single DataFrame variable through chained transformations.
+
+- Developed the Gold Product Dimension (dim_product) from the Silver layer.
+- Performed schema validation, sample data validation, row count, null value analysis, and duplicate key validation.
+- Identified 14 NULL values in Product_Brand and retained them due to the absence of business rules or trusted reference data for imputation.
+- Performed product price profiling using descriptive statistics and derived a new business attribute Price_Category using quartile-based thresholds (Budget, Standard,       Premium, Luxury).
+- Validated the derived Price_Category distribution (250 products in each category) and successfully published the Product Dimension to the Gold layer.
+- Reviewed and standardized Customer, Store, and Product Gold notebooks for consistent ETL structure and validation practices.
