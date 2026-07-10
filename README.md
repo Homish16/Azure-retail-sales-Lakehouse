@@ -9,6 +9,18 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
   <img src="Architecture/lakehouse_architecture.drawio.png" alt="Architecture" width="900"/>
 </p>
 
+## ⭐ Current Warehouse Model
+
+Fact Table
+- fact_sales
+
+Dimensions
+- dim_customer
+- dim_product
+- dim_store
+- dim_date
+Architecture: Star Schema built on Medallion Architecture.
+
 ## 🛠️ Tech Stack
 
 * **Cloud Platform:** Microsoft Azure
@@ -31,7 +43,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 | Sprint 6 – Data Serving & Optimization | ⬜ Planned |
 
 
-## Sprint 1 - Metadata-Driven Ingestion ✅
+## 🚀 Sprint 1 - Metadata-Driven Ingestion ✅
 
 * Created Azure Data Lake Storage Gen2 with Bronze, Silver, and Gold containers.
 * Designed a realistic retail sales dataset consisting of Customers, Products, Stores, Sales, and a metadata configuration file.
@@ -43,17 +55,15 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
   * Copy Activity
 * Successfully ingested Bronze CSV files into the Silver layer as Parquet files.
 
-  
 
-## Sprint 2 - Pipeline Control ✅
+## 🚀 Sprint 2 - Pipeline Control ✅
 
 * Implemented metadata-based file activation using the `Is_Active` flag.
 * Added an If Condition activity to dynamically control file ingestion.
 * Verified that inactive datasets are skipped without modifying the pipeline.
 
   
-
-## Sprint 3 – Azure SQL Metadata Framework
+## 🚀 Sprint 3 – Azure SQL Metadata Framework
 
 ### Features Implemented
 
@@ -64,268 +74,71 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 * Refactored the pipeline into a Parent–Child architecture using Execute Pipeline activity.
 
   
-
 ## 🚀 Sprint 4 – Bronze to Silver Transformation
 
-## Objective
+### Objective
 
-Transform raw Bronze datasets into clean, validated and analytics-ready Silver datasets using PySpark in Azure Databricks.
+Transform raw Bronze datasets into clean, validated, and analytics-ready Silver datasets using PySpark in Azure Databricks.
 
----
+### Customers
 
-## Customers Dataset ✅
+- Applied explicit schema and performed data profiling.
+- Implemented business rule validations and data standardization.
+- Validated schema, row count, null values, duplicates, and sample records.
+- Successfully published the cleansed dataset to the Silver layer.
 
-### Tasks Completed
+### Products
 
-- Read customer data from Bronze layer (CSV)
-- Applied explicit DDL schema
-- Performed data profiling
-    - Row Count
-    - Null Value Analysis
-    - Duplicate Record Analysis
-- Implemented business rule validations
-    - Customer_ID should not be NULL
-    - Customer_ID should be unique
-    - First_Name should not be NULL
-    - Last_Name should not be NULL
-    - Customer_Segment should not be NULL
-    - Registration_Date should not be in the future
-    - Email format validation
-- Applied data standardization
-    - Trimmed whitespace from text columns
-- Wrote cleansed data to Silver layer in Parquet format
-- Read Silver dataset back for validation
-- Verified row counts
+- Applied explicit schema and performed data profiling.
+- Implemented business rule validations for product attributes and pricing.
+- Standardized text fields and validated data quality.
+- Successfully published the cleansed dataset to the Silver layer.
 
-### Validation Summary
+### Stores
 
-| Layer | Row Count |
-|--------|----------:|
-| Bronze | 5000 |
-| Silver | 5000 |
+- Applied explicit schema and performed data profiling.
+- Validated mandatory fields, employee count, and opening dates.
+- Performed schema, row count, null, duplicate, and sample data validations.
+- Successfully published the cleansed dataset to the Silver layer.
 
-✅ No data loss during transformation. 
+### Sales
 
+- Applied explicit schema and comprehensive data quality validations.
+- Validated mandatory fields, numeric values, dates, payment methods, and order status.
+- Performed referential integrity validation against Customer, Product, and Store datasets.
+- Derived business attributes:
+  - `Gross_Price`
+  - `Final_Price`
+- Successfully published the cleansed dataset to the Silver layer.
 
-## Products Bronze → Silver
+### Outcome
 
-- Read product data from Bronze layer (CSV)
-- Applied explicit DDL schema
-- Performed data profiling
-    - Row Count
-    - Null Value Analysis
-    - Duplicate Record Analysis
-- Implemented business rule validations
-    - Product_ID should not be NULL
-    - Product_ID should be unique
-    - Product_Name should not be NULL
-    - Product_Category should not be NULL
-    - Product_SubCategory should not be NULL
-    - Product_Brand should not be NULL
-    - Product_Price should be greater than 0
-    - Product_Unit should not be NULL
-    - Product_Launch_Date should not be in the future
-- Applied data standardization
-    - Trimmed whitespace from text columns
-- Wrote cleansed data to Silver layer in Parquet format
-- Read Silver dataset back for validation
-- Verified row counts
+- All four Silver datasets were successfully created and validated with no data loss.
 
-### Validation Summary
+  
+## 🚀 Sprint 5 – Gold layer
 
-| Layer | Row Count |
-|--------|----------:|
-| Bronze | 1000 |
-| Silver | 1000 |
+Developed `dim_customer`, `dim_product`, and `dim_store` with comprehensive data quality validations. Added `Price_Category` to `dim_product` using quartile-based business classification and successfully published all dimensions to the Gold layer.
 
-✅ No data loss during transformation.
+### Date Dimension
 
+- Generated a complete calendar and derived analytical attributes including `Date_Key`, Year, Quarter, Month, Week, Day, and `Is_Weekend`.
 
- ## Stores Bronze → Silver
-- Read store data from Bronze layer (CSV)
-- Applied explicit DDL schema
-- Performed data profiling
-    - Row Count
-    - Null Value Analysis
-    - Duplicate Record Analysis
-- Implemented business rule validations
-    - Store_ID should not be NULL
-    - Store_ID should be unique
-    - Store_Name should not be NULL
-    - Country should not be NULL
-    - State should not be NULL
-    - City should not be NULL
-    - Store_Type should not be NULL
-    - Employee_Count should be greater than 0
-    - Opening_Date should not be in the future
-- Applied data standardization
-    - Trimmed whitespace from text columns
-- Wrote cleansed data to Silver layer in Parquet format
-- Read Silver dataset back for validation
-- Verified row counts
+### Gold Fact Table
 
-### Validation Summary
+- Developed the `fact_sales` table from the Silver Sales dataset.
+- Validated schema, row count, null values, duplicates, business rules, and referential integrity.
+- Derived analytical attributes:
+  - Date_Key
+  - Discount_Percentage
+  - Discount_Flag
+- Successfully published the Gold Fact table to the Gold layer.
 
-| Layer | Row Count |
-|--------|----------:|
-| Bronze | 100 |
-| Silver | 100 |
-
-✅ No data loss during transformation.
-
-
-## Technologies Used
-
-- Azure Data Lake Storage Gen2
-- Azure Databricks
-- Unity Catalog
-- PySpark
-- Parquet
-- Azure Managed Identity
-- External Locations
-
-- ## Sales Bronze -> Silver 
-
-Implemented the complete Sales Bronze to Silver ETL pipeline using Azure Databricks and PySpark.
-
-### Key Features
-
-- Read Sales data from Bronze layer (CSV)
-- Applied explicit schema for data consistency
-- Performed data profiling
-  - Record count
-  - Null value analysis
-  - Duplicate analysis
-
-### Data Quality Validations
-
-- Duplicate record removal
-- Mandatory field validation
-- Numeric validation
-  - Quantity > 0
-  - Unit Price > 0
-  - Discount Amount ≥ 0
-- Date validation
-  - Sale_DateTime should not be in the future
-- Domain validation
-  - Payment Method
-  - Order Status
-
-### Referential Integrity
-
-Validated Sales records against Silver master datasets using PySpark joins:
-
-- Customer validation
-- Product validation
-- Store validation
-
-### Business Enrichment
-
-Created derived business columns:
-
-- Gross_Price = Quantity × Unit_Price
-- Final_Price = Gross_Price − Discount_Amount
-
-### Output
-
-- Cleaned dataset written to Silver layer in Parquet format
-- Post-write validation performed by comparing row counts and verifying sample records
-
-### Project Documentation
-
-- Added Bronze to Silver notebooks to GitHub
-- Created project architecture diagram using draw.io
-- Embedded architecture diagram in README
-- Improved notebook documentation and markdown structure
-- Cleaned notebook by removing unnecessary debugging cells
-
-### Current Project Status
+ ### Current Project Status
 
 - ✅ Metadata-Driven Ingestion
 - ✅ Bronze Layer
 - ✅ Silver Layer
-- ⏳ Gold Layer (Next Sprint)
+- ✅ Gold Layer
+- ⏳ Data Serving & Optimization (Next Sprint)
 
-### Technologies
-
-- Azure Databricks
-- PySpark
-- Azure Data Lake Storage Gen2
-- Parquet
-
-## Sprint 5 – Gold Dimensions
-
-- Developed dim_customer, dim_product and dim_store.
-- Performed schema, row count, null, duplicate and sample data validations.
-- Created Price_Category for Product Dimension.
-- Published all dimensions to Gold layer.
-- 
-### Tasks Completed
-
-- Created notebook: `05-Date-Dimension-Silver-to-Gold`
-- Read Sales data from Silver Layer (Parquet).
-- Calculated minimum and maximum sales dates using aggregate functions.
-- Generated a complete calendar using:
-  - `sequence()`
-  - `explode()`
-- Built the Date Dimension with the following attributes:
-  - Date
-  - Date_Key (YYYYMMDD)
-  - Year
-  - Quarter
-  - Month_Number
-  - Month_Name
-  - Week_Number
-  - Day_Number
-  - Day_Name
-  - Is_Weekend
-- Applied business logic to identify weekends.
-- Performed data quality validation:
-  - Row Count
-  - Null Check
-  - Duplicate Check
-  - Schema Validation
-- Successfully wrote the Date Dimension to the Gold Layer and validated the output.
-
-### Key Learnings
-
-- Difference between Spark DataFrames, Row objects and Python objects.
-- Practical usage of:
-  - `sequence()`
-  - `explode()`
-  - `date_format()`
-  - `year()`
-  - `quarter()`
-  - `month()`
-  - `weekofyear()`
-  - `dayofmonth()`
-  - `dayofweek()`
-  - `when()` / `otherwise()`
-- Understood why Date Dimensions are essential in dimensional modeling.
-- Learned that Spark DataFrames are immutable while Python variables can be reassigned to newer DataFrame references.
-- Discussed enterprise coding practices such as maintaining a single DataFrame variable through chained transformations.
-
-- Developed the Gold Product,Store and Customer Dimension (dim_product,dim_store & dim_customer) from the Silver layer.
-- Performed schema validation, sample data validation, row count, null value analysis, and duplicate key validation.
-- Identified 14 NULL values in Product_Brand and retained them due to the absence of business rules or trusted reference data for imputation.
-- Performed product price profiling using descriptive statistics and derived a new business attribute Price_Category using quartile-based thresholds (Budget, Standard,       Premium, Luxury).
-- Validated the derived Price_Category distribution (250 products in each category) and successfully published the Product Dimension to the Gold layer.
-- Reviewed and standardized Customer, Store, and Product Gold notebooks for consistent ETL structure and validation practices.
-
-## Sprint 5 – Gold Fact Table Completion
-
-- Completed Gold implementation for `fact_sales`.
-- Performed:
-  - Schema validation
-  - Row count validation
-  - Null value analysis
-  - Duplicate validation
-- Validated:
-  - Gross_Price
-  - Final_Price
-- Implemented:
-  - Date_Key
-  - Discount_Percentage
-  - Discount_Flag
-- Performed referential integrity validation for Customer, Product, Store and Date.
-- Successfully completed the Gold Layer.
