@@ -27,7 +27,7 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 | Sprint 2 – Incremental Loading | ✅ Completed |
 | Sprint 3 – Metadata & Watermark Framework | ✅ Completed |
 | Sprint 4 – Bronze → Silver Transformation | ✅ Completed |
-| Sprint 5 – Silver → Gold Transformation | ⬜ Planned |
+| Sprint 5 – Silver → Gold Transformation | ✅ Completed |
 | Sprint 6 – Data Serving & Optimization | ⬜ Planned |
 
 
@@ -231,33 +231,6 @@ Created derived business columns:
 - Cleaned dataset written to Silver layer in Parquet format
 - Post-write validation performed by comparing row counts and verifying sample records
 
-- ## Sprint 4 Completion – Bronze to Silver Layer
-
-Completed the Bronze to Silver implementation for all four datasets (Customers, Products, Stores, and Sales).
-
-### Sales Bronze → Silver Pipeline
-
-Implemented the complete Sales transformation pipeline using Azure Databricks and PySpark.
-
-#### Data Processing
-
-- Read Sales data from Bronze layer
-- Applied explicit schema
-- Performed data profiling
-- Duplicate record analysis
-- Mandatory field validation
-- Numeric validation
-- Date validation
-- Customer referential integrity validation
-- Product referential integrity validation
-- Store referential integrity validation
-- Business enrichment
-  - Gross_Price
-  - Final_Price
-- Domain validation
-- Wrote cleansed data to Silver layer in Parquet format
-- Performed post-write validation
-
 ### Project Documentation
 
 - Added Bronze to Silver notebooks to GitHub
@@ -280,11 +253,13 @@ Implemented the complete Sales transformation pipeline using Azure Databricks an
 - Azure Data Lake Storage Gen2
 - Parquet
 
-## Sprint 5 – Gold Layer Development (Part 1): Date Dimension
+## Sprint 5 – Gold Dimensions
 
-### Objective
-Started the Gold Layer implementation by building the Date Dimension (`dim_date`) from the Silver Sales dataset. The objective was to create a reusable calendar dimension for analytical reporting and Power BI dashboards.
-
+- Developed dim_customer, dim_product and dim_store.
+- Performed schema, row count, null, duplicate and sample data validations.
+- Created Price_Category for Product Dimension.
+- Published all dimensions to Gold layer.
+- 
 ### Tasks Completed
 
 - Created notebook: `05-Date-Dimension-Silver-to-Gold`
@@ -339,30 +314,18 @@ Started the Gold Layer implementation by building the Date Dimension (`dim_date`
 
 ## Sprint 5 – Gold Fact Table Completion
 
-Completed Gold Layer implementation for fact_sales.
-Performed data quality validations:
-Schema validation
-Row count validation
-Null value analysis
-Duplicate check using Sale_ID
-Validated business rules:
-Gross_Price = Quantity × Unit_Price
-Final_Price = Gross_Price − Discount_Amount
-Resolved floating-point precision issue during Gross Price validation.
-Performed referential integrity validation for:
-Customer
-Product
-Store
-Date
-
-Added business transformations:
-Date_Key
-Discount_Percentage
-Discount_Flag
-Retained both Sale_DateTime and Date_Key to support Star Schema relationships and time-based analysis.
-Successfully completed the Gold Layer with a Star Schema consisting of:
-dim_customer
-dim_product
-dim_store
-dim_date
-fact_sales
+- Completed Gold implementation for `fact_sales`.
+- Performed:
+  - Schema validation
+  - Row count validation
+  - Null value analysis
+  - Duplicate validation
+- Validated:
+  - Gross_Price
+  - Final_Price
+- Implemented:
+  - Date_Key
+  - Discount_Percentage
+  - Discount_Flag
+- Performed referential integrity validation for Customer, Product, Store and Date.
+- Successfully completed the Gold Layer.
