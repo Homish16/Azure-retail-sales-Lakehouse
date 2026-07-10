@@ -336,3 +336,33 @@ Started the Gold Layer implementation by building the Date Dimension (`dim_date`
 - Performed product price profiling using descriptive statistics and derived a new business attribute Price_Category using quartile-based thresholds (Budget, Standard,       Premium, Luxury).
 - Validated the derived Price_Category distribution (250 products in each category) and successfully published the Product Dimension to the Gold layer.
 - Reviewed and standardized Customer, Store, and Product Gold notebooks for consistent ETL structure and validation practices.
+
+## Sprint 5 – Gold Fact Table Completion
+
+Completed Gold Layer implementation for fact_sales.
+Performed data quality validations:
+Schema validation
+Row count validation
+Null value analysis
+Duplicate check using Sale_ID
+Validated business rules:
+Gross_Price = Quantity × Unit_Price
+Final_Price = Gross_Price − Discount_Amount
+Resolved floating-point precision issue during Gross Price validation.
+Performed referential integrity validation for:
+Customer
+Product
+Store
+Date
+
+Added business transformations:
+Date_Key
+Discount_Percentage
+Discount_Flag
+Retained both Sale_DateTime and Date_Key to support Star Schema relationships and time-based analysis.
+Successfully completed the Gold Layer with a Star Schema consisting of:
+dim_customer
+dim_product
+dim_store
+dim_date
+fact_sales
