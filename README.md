@@ -40,7 +40,7 @@ Architecture: Star Schema built on Medallion Architecture.
 | Sprint 3 – Metadata & Watermark Framework | ✅ Completed |
 | Sprint 4 – Bronze → Silver Transformation | ✅ Completed |
 | Sprint 5 – Silver → Gold Transformation | ✅ Completed |
-| Sprint 6 – Data Serving & Optimization | ⬜ Planned |
+| Sprint 6 – Delta Lake & Unity Catalog |✅ Completed |
 
 
 ## 🚀 Sprint 1 - Metadata-Driven Ingestion ✅
