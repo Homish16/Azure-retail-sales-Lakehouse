@@ -5,8 +5,13 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
 
 # Project Architecture
 
-[![Azure Retail Sales Lakehouse Architecture](Architecture/azure_lakehouse_architecture.png)](Architecture/azure_lakehouse_architecture.png)
+<p align="center">
+  <img src="Architecture/azure_lakehouse_architecture.png" alt="Architecture">
+</p>
 
+<p align="center">
+  <i>💡 Open <code>Architecture/azure_lakehouse_architecture.png</code> in a new tab to view the diagram in full resolution.</i>
+</p>
 ## ⭐ Current Warehouse Model
 
 Fact Table
