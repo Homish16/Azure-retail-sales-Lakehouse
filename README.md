@@ -134,11 +134,29 @@ Developed `dim_customer`, `dim_product`, and `dim_store` with comprehensive data
   - Discount_Flag
 - Successfully published the Gold Fact table to the Gold layer.
 
+## Sprint 6 – Delta Lake & Unity Catalog
+
+- Converted all Gold layer Parquet datasets to Delta Lake format.
+- Created a dedicated gold-delta ADLS container to store Delta tables.
+- Validated each migration by verifying:
+- Delta storage structure (_delta_log)
+- Row counts
+- Schema consistency
+- Sample records
+- Created a Gold schema in Unity Catalog.
+- Registered all Delta datasets as External Tables:
+- dim_customer
+- dim_date
+- dim_product
+- dim_store
+- fact_sales
+- Verified successful registration using SQL queries.
+- Prepared the serving layer for downstream analytics and Power BI consumption.
+
  ### Current Project Status
 
 - ✅ Metadata-Driven Ingestion
 - ✅ Bronze Layer
 - ✅ Silver Layer
 - ✅ Gold Layer
-- ⏳ Data Serving & Optimization (Next Sprint)
-
+- ✅ Delta Migration & Unity Catalog Registration
