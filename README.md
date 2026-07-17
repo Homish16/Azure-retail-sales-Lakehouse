@@ -1,6 +1,14 @@
 # Azure Retail Sales Lakehouse
 
-End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse using Azure Data Factory, Azure Data Lake Storage Gen2 (ADLS Gen2), Azure Databricks, PySpark, and SQL. The project features a metadata-driven ingestion framework based on the Medallion Architecture (Bronze, Silver, Gold).
+End-to-end Azure Data Engineering project implementing a **Retail Sales Lakehouse** on the **Medallion Architecture** (Bronze → Silver → Gold), built with Azure Data Factory, Azure Data Lake Storage Gen2, Azure Databricks, PySpark, Delta Lake, and Unity Catalog.
+
+The pipeline ingests four retail source files through a metadata-driven ADF framework, applies schema enforcement and data-quality validation in PySpark, and publishes a **star schema** to a governed Gold layer, ready for BI consumption.
+
+**Why this design:**
+- **Medallion architecture** separates raw ingestion (Bronze), validated/cleansed data (Silver), and business-ready aggregates (Gold), so each layer has a single clear responsibility and failures are easy to isolate.
+- **Metadata-driven ingestion** (a config file drives a parameterized ADF pipeline via Lookup → ForEach → Copy) means adding a new source table is a config change, not a new pipeline.
+- **Delta Lake over plain Parquet in Gold** adds ACID transactions, schema enforcement, and time travel — needed once the Gold layer is exposed to BI tools and concurrent readers/writers.
+- **Unity Catalog external tables** decouple governance (access control, lineage) from storage, so Power BI and other consumers query governed tables rather than raw file paths.
 
 
 # Project Architecture
@@ -9,17 +17,52 @@ End-to-end Azure Data Engineering project implementing a Retail Sales Lakehouse 
   <img src="Architecture/azure_lakehouse_overview_v3.png" alt="Architecture">
 </p>
 
-## ⭐ Current Warehouse Model
+## 📁 Repository Structure
 
-Fact Table
-- fact_sales
+```
+├── Architecture/
+│   ├── azure_lakehouse_architecture.svg
+│   └── azure_lakehouse_architecture.png
+├── ADF_Pipelines/              # Metadata-driven pipeline, dataset & linked service JSON
+├── Silver_Notebooks/
+│   ├── 01-Customers-bronze-to-silver
+│   ├── 02-Products-Bronze-to-Silver
+│   ├── 03-Stores-Bronze-to-Silver
+│   └── 04-Sales-Bronze-to-Silver_Final
+├── Gold_Notebooks/
+│   ├── 05-Date-Dimension-Silver-to-Gold
+│   ├── 06-Customer-Dimension-silver-to-gold
+│   ├── 07-Store-Dimension-Silver-to-Gold
+│   ├── 08-Product-Dimension-Silver-to-Gold
+│   └── 09-Fact-Sales-Silver-to-Gold_final
+├── Delta_Notebooks/
+│   ├── 10-delta-dim-stores
+│   ├── 11-delta-dim-customers
+│   ├── 12-delta-dim-products
+│   ├── 13-delta-dim-date
+│   └── 14-delta-fact-sales
+├── sql/                         # Unity Catalog external table registration scripts
+└── README.md
+```
 
-Dimensions
-- dim_customer
-- dim_product
-- dim_store
-- dim_date
-Architecture: Star Schema built on Medallion Architecture.
+
+---
+
+## ⭐ Warehouse Model — Star Schema
+
+**Fact Table**
+- `fact_sales` — 72,445 rows, line-item grain (one row = one product line within a customer order)
+
+**Dimensions**
+- `dim_customer` — 5,000 rows
+- `dim_product` — 1,000 rows
+- `dim_store` — 25 rows
+- `dim_date` — 546 rows (2025-01-01 → 2026-06-30, generated from the actual Sale_DateTime range in the Sales dataset)
+
+All four dimension keys were validated with zero orphaned foreign keys in `fact_sales` before publishing to Gold.
+
+---
+
 
 ## 🛠️ Tech Stack
 
@@ -28,135 +71,113 @@ Architecture: Star Schema built on Medallion Architecture.
 * **Data Integration:** Azure Data Factory
 * **Processing:** Azure Databricks
 * **Languages:** PySpark, SQL
-* **Architecture:** Medallion Architecture (Bronze, Silver, Gold)
-* **File Formats:** CSV, Parquet
+* **Architecture:** Medallion Architecture (Bronze, Silver, Gold) + Star Schema
+* **File Formats:** CSV (Bronze) → Parquet (Silver/Gold) → Delta (Gold-Delta)
+* **Governance:** Unity Catalog (external tables, storage credentials, external locations)
+
+---
 
 ## 📌 Project Progress
 
-| Sprint | Status |
-|---------|--------|
-| Sprint 1 – Metadata Driven Ingestion | ✅ Completed |
-| Sprint 2 – Incremental Loading | ✅ Completed |
-| Sprint 3 – Metadata & Watermark Framework | ✅ Completed |
-| Sprint 4 – Bronze → Silver Transformation | ✅ Completed |
-| Sprint 5 – Silver → Gold Transformation | ✅ Completed |
-| Sprint 6 – Delta Lake & Unity Catalog |✅ Completed |
+| Sprint | Focus | Status |
+|---|---|---|
+| Sprint 1 | Metadata-Driven Ingestion | ✅ Completed |
+| Sprint 2 | Pipeline Control (Incremental Loading) | ✅ Completed |
+| Sprint 3 | Azure SQL Metadata & Watermark Framework | ✅ Completed |
+| Sprint 4 | Bronze → Silver Transformation | ✅ Completed |
+| Sprint 5 | Silver → Gold Transformation | ✅ Completed |
+| Sprint 6 | Delta Lake & Unity Catalog | ✅ Completed |
+
+---
 
 
-## 🚀 Sprint 1 - Metadata-Driven Ingestion ✅
+## 🚀 Sprint 1 – Metadata-Driven Ingestion ✅
 
-* Created Azure Data Lake Storage Gen2 with Bronze, Silver, and Gold containers.
-* Designed a realistic retail sales dataset consisting of Customers, Products, Stores, Sales, and a metadata configuration file.
-* Developed a metadata-driven Azure Data Factory pipeline using:
-
-  * Lookup Activity
-  * ForEach Activity
-  * Parameterized Datasets
-  * Copy Activity
-* Successfully ingested Bronze CSV files into the Silver layer as Parquet files.
+* Created ADLS Gen2 with Bronze, Silver, and Gold containers.
+* Designed a realistic retail dataset: Customers, Products, Stores, Sales, plus a metadata configuration file.
+* Built a metadata-driven ADF pipeline using Lookup, ForEach, parameterized datasets, and Copy activities.
+* Ingested Bronze CSVs into ADLS Gen2 as the landing layer.
 
 
-## 🚀 Sprint 2 - Pipeline Control ✅
+## 🚀 Sprint 2 – Pipeline Control ✅
 
-* Implemented metadata-based file activation using the `Is_Active` flag.
-* Added an If Condition activity to dynamically control file ingestion.
-* Verified that inactive datasets are skipped without modifying the pipeline.
+* Implemented metadata-based file activation using an `Is_Active` flag.
+* Added an If Condition activity to dynamically include/skip datasets per run.
+* Verified inactive datasets are skipped without modifying the pipeline itself.
 
   
-## 🚀 Sprint 3 – Azure SQL Metadata Framework
+## 🚀 Sprint 3 – Azure SQL Metadata & Watermark Framework ✅
 
-### Features Implemented
+* Created Azure SQL Server/Database and a `watermark_metadata` table for runtime metadata.
+* Configured the Azure SQL linked service and dataset in ADF.
+* Implemented dynamic watermark lookups for incremental loading.
+* Refactored the pipeline into a Parent–Child architecture using Execute Pipeline.
+  
+## 🚀 Sprint 4 – Bronze → Silver Transformation ✅
 
-* Created Azure SQL Server and Azure SQL Database.
-* Designed `watermark_metadata` table for runtime metadata.
-* Configured Azure SQL Linked Service and Dataset in ADF.
-* Implemented dynamic watermark lookup using Lookup Activity.
-* Refactored the pipeline into a Parent–Child architecture using Execute Pipeline activity.
+Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datasets using PySpark on Databricks. Each dataset was schema-enforced, profiled, and validated against explicit business rules before being published.
+
+| Dataset | Raw Rows | Silver Rows | Key Validations | Result |
+|---|---|---|---|---|
+| **Customers** | 5,000 | 5,000 | ID/name/segment not null, email format, registration date ≤ today, duplicate check | No dupes; 63 rows with null email retained (no business rule required rejection) |
+| **Products** | 1,000 | 1,000 | ID not null, price/launch date sanity, duplicate check | No dupes; 14 rows with null `Product_Brand` retained (no reference data to impute) |
+| **Stores** | 25 | 25 | All fields not null, duplicate check | Clean — 0 nulls, 0 duplicates |
+| **Sales** | 75,635 | 72,445 | Dedup, mandatory fields, numeric sanity, date sanity, 3× referential integrity, domain validation | 3,190 records rejected across 6 gates (funnel below) |
+
+**Sales data-quality funnel** (the most complex transformation in the project):
+
+| Stage | Rows In | Rejected | Rows Out | Reason |
+|---|---|---|---|---|
+| Raw | 75,635 | — | 75,635 | Source file |
+| Dedup on `Sale_ID` | 75,635 | 500 | 75,135 | Exact duplicate line items |
+| Mandatory field check | 75,135 | 769 | 74,366 | All missing `Payment_Method` |
+| Numeric validation | 74,366 | 774 | 73,592 | `Quantity ≤ 0` (negative quantity, e.g. `-1`) |
+| Date validation | 73,592 | 0 | 73,592 | All `Sale_DateTime` ≤ current timestamp |
+| Customer FK integrity | 73,592 | 783 | 72,809 | Orphaned `Customer_ID` (sentinel `C99999`) |
+| Product FK integrity | 72,809 | 364 | 72,445 | Orphaned `Product_ID` (sentinel `P9999`) |
+| Store FK integrity | 72,445 | 0 | 72,445 | Clean |
+| Domain validation | 72,445 | 0 | 72,445 | `Payment_Method` / `Order_Status` enums clean |
+| **Final Silver output** | | **3,190 total rejected (4.2%)** | **72,445** | Enriched with `Gross_Price`, `Final_Price` |
+
 
   
-## 🚀 Sprint 4 – Bronze to Silver Transformation
+## 🚀 Sprint 5 – Silver → Gold Transformation ✅
 
-### Objective
+* `dim_customer`, `dim_store` — pass-through from Silver, re-validated (5,000 / 25 rows, 0 dupes).
+* `dim_product` — added `Price_Category` via quartile-based classification on `Product_Price` (Budget/Standard/Premium/Luxury, 250 products each).
+* `dim_date` — generated a full calendar (546 days) spanning the actual Sales date range, with `Date_Key`, Year, Quarter, Month, Week, Day, and `Is_Weekend`.
+* `fact_sales` — built from Silver Sales (72,445 rows); validated schema, duplicates, and referential integrity against all four dimensions (**zero orphaned keys**). Derived `Date_Key`, `Discount_Percentage`, and `Discount_Flag` (72,162 discounted / 283 non-discounted transactions).
 
-Transform raw Bronze datasets into clean, validated, and analytics-ready Silver datasets using PySpark in Azure Databricks.
 
-### Customers
+## 🚀 Sprint 6 – Delta Lake & Unity Catalog ✅
 
-- Applied explicit schema and performed data profiling.
-- Implemented business rule validations and data standardization.
-- Validated schema, row count, null values, duplicates, and sample records.
-- Successfully published the cleansed dataset to the Silver layer.
+* Converted all 5 Gold Parquet datasets to Delta format in a dedicated `gold-delta` ADLS container.
+* Validated each migration: `_delta_log` structure present, row counts matched source Parquet exactly, schema consistent, sample records spot-checked.
+* Registered all 5 Delta tables as **external tables** in a Unity Catalog Gold schema:
+  - `dim_customer`, `dim_date`, `dim_product`, `dim_store`, `fact_sales`
+* Verified registration via `SHOW EXTERNAL LOCATIONS` and `SELECT` queries against the catalog.
+* Serving layer is ready for Power BI / downstream analytics consumption.
 
-### Products
+---
 
-- Applied explicit schema and performed data profiling.
-- Implemented business rule validations for product attributes and pricing.
-- Standardized text fields and validated data quality.
-- Successfully published the cleansed dataset to the Silver layer.
 
-### Stores
+ ## 🔍 Key Challenges & Decisions
 
-- Applied explicit schema and performed data profiling.
-- Validated mandatory fields, employee count, and opening dates.
-- Performed schema, row count, null, duplicate, and sample data validations.
-- Successfully published the cleansed dataset to the Silver layer.
+**1. Floating-point precision false-positives in business rule validation.**
+A rule checking `Quantity × Unit_Price = Gross_Price` initially flagged 8,666 records as invalid — nearly 12% of the dataset. Investigation showed the calculated and stored values were visually identical; the mismatch came from `double`-type binary rounding, not a real data error. Rounding both sides to 2 decimal places before comparison resolved all 8,666 false positives (0 real mismatches remained). This is a good example of why a failing validation should always be root-caused before rejecting data.
 
-### Sales
+**2. Planted bad data for referential integrity testing.**
+The Sales dataset included intentional sentinel values (`Customer_ID = C99999`, `Product_ID = P9999`) that don't exist in any dimension. Building the FK validation as anti-join / semi-join pairs against each dimension caught these deterministically (783 and 364 rows respectively) — a pattern that generalizes cleanly to any number of dimensions.
 
-- Applied explicit schema and comprehensive data quality validations.
-- Validated mandatory fields, numeric values, dates, payment methods, and order status.
-- Performed referential integrity validation against Customer, Product, and Store datasets.
-- Derived business attributes:
-  - `Gross_Price`
-  - `Final_Price`
-- Successfully published the cleansed dataset to the Silver layer.
+**3. Full accountability for every rejected record.**
+Rather than a single blanket "clean the data" step, Sales runs through 6 sequential, independently-counted gates (dedup → mandatory fields → numeric → 3× FK integrity → domain). Every one of the 3,190 rejected records is attributable to a specific, named rule — important for debugging and for explaining data loss to stakeholders.
 
-### Outcome
+---
 
-- All four Silver datasets were successfully created and validated with no data loss.
-
-  
-## 🚀 Sprint 5 – Gold layer
-
-Developed `dim_customer`, `dim_product`, and `dim_store` with comprehensive data quality validations. Added `Price_Category` to `dim_product` using quartile-based business classification and successfully published all dimensions to the Gold layer.
-
-### Date Dimension
-
-- Generated a complete calendar and derived analytical attributes including `Date_Key`, Year, Quarter, Month, Week, Day, and `Is_Weekend`.
-
-### Gold Fact Table
-
-- Developed the `fact_sales` table from the Silver Sales dataset.
-- Validated schema, row count, null values, duplicates, business rules, and referential integrity.
-- Derived analytical attributes:
-  - Date_Key
-  - Discount_Percentage
-  - Discount_Flag
-- Successfully published the Gold Fact table to the Gold layer.
-
-## Sprint 6 – Delta Lake & Unity Catalog
-
-- Converted all Gold layer Parquet datasets to Delta Lake format.
-- Created a dedicated gold-delta ADLS container to store Delta tables.
-- Validated each migration by verifying:
-- Delta storage structure (_delta_log)
-- Row counts
-- Schema consistency
-- Sample records
-- Created a Gold schema in Unity Catalog.
-- Registered all Delta datasets as External Tables:
-- dim_customer
-- dim_date
-- dim_product
-- dim_store
-- fact_sales
-- Verified successful registration using SQL queries.
-- Prepared the serving layer for downstream analytics and Power BI consumption.
-
- ### Current Project Status
+## Current Project Status
 
 - ✅ Metadata-Driven Ingestion
 - ✅ Bronze Layer
-- ✅ Silver Layer
-- ✅ Gold Layer
+- ✅ Silver Layer (72,445 clean Sales records + 3 fully validated dimensions)
+- ✅ Gold Layer (Star Schema: 1 fact, 4 dimensions, 0 orphaned keys)
 - ✅ Delta Migration & Unity Catalog Registration
