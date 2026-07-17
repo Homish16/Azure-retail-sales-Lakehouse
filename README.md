@@ -34,7 +34,7 @@ The pipeline ingests four retail source files through a metadata-driven ADF fram
 
 ```
 ├── Architecture/
-│   ├── azure_lakehouse_architecture.svg
+│   ├── Project_Architecture.svg
 │   └── azure_lakehouse_architecture.png
 │
 ├── ADF_Pipelines/                  # Metadata-driven pipeline, datasets & linked service JSON
