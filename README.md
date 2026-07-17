@@ -5,16 +5,29 @@ End-to-end Azure Data Engineering project implementing a **Retail Sales Lakehous
 The pipeline ingests four retail source files through a metadata-driven ADF framework, applies schema enforcement and data-quality validation in PySpark, and publishes a **star schema** to a governed Gold layer, ready for BI consumption.
 
 **Why this design:**
-- **Medallion architecture** separates raw ingestion (Bronze), validated/cleansed data (Silver), and business-ready aggregates (Gold), so each layer has a single clear responsibility and failures are easy to isolate.
-- **Metadata-driven ingestion** (a config file drives a parameterized ADF pipeline via Lookup → ForEach → Copy) means adding a new source table is a config change, not a new pipeline.
-- **Delta Lake over plain Parquet in Gold** adds ACID transactions, schema enforcement, and time travel — needed once the Gold layer is exposed to BI tools and concurrent readers/writers.
-- **Unity Catalog external tables** decouple governance (access control, lineage) from storage, so Power BI and other consumers query governed tables rather than raw file paths.
+- **Medallion Architecture** separates raw ingestion (Bronze), validated and cleansed data (Silver), and analytics-ready data (Gold), giving each layer a clear responsibility while making data quality issues easier to isolate and troubleshoot.
+- **Metadata-driven ingestion** uses a configuration file to drive a parameterized Azure Data Factory pipeline (Lookup → ForEach → Copy), allowing new source tables to be onboarded through configuration rather than pipeline development.
+- **Delta Lake in the Gold layer** provides ACID transactions, schema enforcement, and time travel, making the analytics layer more reliable and production-ready for BI workloads.
+- **Unity Catalog external tables** separate data governance from physical storage, enabling secure, governed access for Power BI and other consumers without exposing raw storage paths.
 
+---
 
-# Project Architecture
+## ⭐ Project Highlights
+
+- Metadata-driven Azure Data Factory pipeline for configurable ingestion
+- End-to-end Medallion Architecture (Bronze → Silver → Gold)
+- Incremental loading using watermark-based processing
+- Data quality validation with rejected records and auditability
+- Star schema with dimension and fact tables
+- Delta Lake implementation with Unity Catalog governance
+- Power BI-ready Gold layer for analytics
+
+---
+
+## 🏗️ Project Architecture
 
 <p align="center">
-  <img src="Architecture/azure_lakehouse_overview_v3.png" alt="Architecture">
+  <img src="Architecture/Project_Architecture.svg" alt="Architecture">
 </p>
 
 ## 📁 Repository Structure
@@ -23,25 +36,32 @@ The pipeline ingests four retail source files through a metadata-driven ADF fram
 ├── Architecture/
 │   ├── azure_lakehouse_architecture.svg
 │   └── azure_lakehouse_architecture.png
-├── ADF_Pipelines/              # Metadata-driven pipeline, dataset & linked service JSON
-├── Silver_Notebooks/
-│   ├── 01-Customers-bronze-to-silver
-│   ├── 02-Products-Bronze-to-Silver
-│   ├── 03-Stores-Bronze-to-Silver
-│   └── 04-Sales-Bronze-to-Silver_Final
-├── Gold_Notebooks/
-│   ├── 05-Date-Dimension-Silver-to-Gold
-│   ├── 06-Customer-Dimension-silver-to-gold
-│   ├── 07-Store-Dimension-Silver-to-Gold
-│   ├── 08-Product-Dimension-Silver-to-Gold
-│   └── 09-Fact-Sales-Silver-to-Gold_final
-├── Delta_Notebooks/
-│   ├── 10-delta-dim-stores
-│   ├── 11-delta-dim-customers
-│   ├── 12-delta-dim-products
-│   ├── 13-delta-dim-date
-│   └── 14-delta-fact-sales
-├── sql/                         # Unity Catalog external table registration scripts
+│
+├── ADF_Pipelines/                  # Metadata-driven pipeline, datasets & linked service JSON
+│
+├── Notebooks/
+│   ├── Silver_Notebooks/
+│   │   ├── 01-Customers-Bronze-to-Silver
+│   │   ├── 02-Products-Bronze-to-Silver
+│   │   ├── 03-Stores-Bronze-to-Silver
+│   │   └── 04-Sales-Bronze-to-Silver_Final
+│   │
+│   ├── Gold_Parquet_Notebooks/
+│   │   ├── 05-Date-Dimension-Silver-to-Gold
+│   │   ├── 06-Customer-Dimension-Silver-to-Gold
+│   │   ├── 07-Store-Dimension-Silver-to-Gold
+│   │   ├── 08-Product-Dimension-Silver-to-Gold
+│   │   └── 09-Fact-Sales-Silver-to-Gold_Final
+│   │
+│   └── Gold_Delta_Notebooks/
+│       ├── 10-delta-dim-date
+│       ├── 11-delta-dim-customers
+│       ├── 12-delta-dim-products
+│       ├── 13-delta-dim-stores
+│       └── 14-delta-fact-sales
+│
+├── sql/                            # Unity Catalog external table registration scripts
+│
 └── README.md
 ```
 
@@ -72,7 +92,7 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 * **Processing:** Azure Databricks
 * **Languages:** PySpark, SQL
 * **Architecture:** Medallion Architecture (Bronze, Silver, Gold) + Star Schema
-* **File Formats:** CSV (Bronze) → Parquet (Silver/Gold) → Delta (Gold-Delta)
+* **Storage Formats:** CSV (Bronze), Parquet (Silver and initial Gold implementation), Delta Lake (refactored Gold implementation)
 * **Governance:** Unity Catalog (external tables, storage credentials, external locations)
 
 ---
@@ -87,7 +107,7 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 | Sprint 4 | Bronze → Silver Transformation | ✅ Completed |
 | Sprint 5 | Silver → Gold Transformation | ✅ Completed |
 | Sprint 6 | Delta Lake & Unity Catalog | ✅ Completed |
-
+| Sprint 7 | Power BI Dashboard & Analytics | ✅ Completed |
 ---
 
 
@@ -160,8 +180,24 @@ Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datas
 
 ---
 
+### Sprint 7 – Power BI Dashboard & Analytics
 
- ## 🔍 Key Challenges & Decisions
+**Objective:** Build an interactive business intelligence dashboard on top of the curated Gold layer to demonstrate end-to-end analytics.
+
+**Key Deliverables:**
+- Connected Power BI to the curated Gold layer.
+- Built a star schema-based semantic model using fact and dimension tables.
+- Created DAX measures for key business KPIs.
+- Designed an interactive dashboard with slicers, filters, and drill-down capabilities.
+- Developed business-focused visualizations for sales performance, customer insights, product analysis, and store performance.
+- Optimized the report model for usability and analytical exploration.
+
+**Outcome:**
+- Successfully completed an end-to-end Azure Data Engineering solution, from data ingestion through transformation, governance, and business intelligence reporting.
+
+---
+
+## 💡 Key Challenges & Engineering Decisions
 
 **1. Floating-point precision false-positives in business rule validation.**
 A rule checking `Quantity × Unit_Price = Gross_Price` initially flagged 8,666 records as invalid — nearly 12% of the dataset. Investigation showed the calculated and stored values were visually identical; the mismatch came from `double`-type binary rounding, not a real data error. Rounding both sides to 2 decimal places before comparison resolved all 8,666 false positives (0 real mismatches remained). This is a good example of why a failing validation should always be root-caused before rejecting data.
@@ -172,12 +208,7 @@ The Sales dataset included intentional sentinel values (`Customer_ID = C99999`, 
 **3. Full accountability for every rejected record.**
 Rather than a single blanket "clean the data" step, Sales runs through 6 sequential, independently-counted gates (dedup → mandatory fields → numeric → 3× FK integrity → domain). Every one of the 3,190 rejected records is attributable to a specific, named rule — important for debugging and for explaining data loss to stakeholders.
 
+**4. Incremental evolution of the Gold layer from Parquet to Delta Lake.**
+The Gold layer was initially implemented using Parquet to validate the complete Medallion Architecture, star schema design, and business transformations before introducing additional platform capabilities. Once the end-to-end pipeline and Gold model were verified, the implementation was deliberately refactored to Delta Lake to gain ACID transactions, schema enforcement, and Unity Catalog integration for governed data access. The original Parquet implementation is retained in the repository as a reference to the project's learning progression and engineering evolution, while the Delta Lake implementation represents the current active Gold serving layer used for downstream analytics.
+
 ---
-
-## Current Project Status
-
-- ✅ Metadata-Driven Ingestion
-- ✅ Bronze Layer
-- ✅ Silver Layer (72,445 clean Sales records + 3 fully validated dimensions)
-- ✅ Gold Layer (Star Schema: 1 fact, 4 dimensions, 0 orphaned keys)
-- ✅ Delta Migration & Unity Catalog Registration
