@@ -210,7 +210,7 @@ Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datas
 * `dim_product` — added `Price_Category` via quartile-based classification on `Product_Price` (Budget/Standard/Premium/Luxury, 250 products each).
 * `dim_date` — generated dynamically from the minimum and maximum `Sale_DateTime` values in the Sales dataset (546 days). This guarantees complete date coverage for the fact table while avoiding unnecessary future dates. validated schema, duplicates, and referential integrity against Customer, Product, and Store dimensions (zero orphaned keys).
 * Date coverage was inherently guaranteed because `dim_date` was generated directly from the Sales date range.
-* `fact_sales` — built from Silver Sales (72,445 rows); validated schema, duplicates, and referential integrity against all four dimensions (**zero orphaned keys**). Derived `Date_Key`, `Discount_Percentage`, and `Discount_Flag` (72,162 discounted / 283 non-discounted transactions).
+* `fact_sales` — Built from Silver Sales (72,445 rows); validated schema, duplicates, and referential integrity against Customer, Product, and Store dimensions (zero orphaned keys). Derived `Date_Key`, `Discount_Percentage`, and `Discount_Flag` (72,162 discounted / 283 non-discounted transactions).
 
 
 ## 🚀 Sprint 6 – Delta Lake & Unity Catalog ✅
