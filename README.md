@@ -37,9 +37,23 @@ The pipeline ingests four retail source files through a metadata-driven ADF fram
 │   ├── Project_Architecture.svg
 │   └── azure_lakehouse_architecture.png
 │
-├── ADF_Pipelines/                  # Metadata-driven pipeline, datasets & linked service JSON
+├── ADF components/                  # Azure Data Factory pipelines, datasets & linked services
+│   ├── Datasets/
+│   ├── Linked Services/
+│   └── Pipelines/
 │
-├── Notebooks/
+├── Azure Components/                # Azure resources and implementation screenshots
+│   ├── ADLS Gen2/
+│   ├── Azure Data Factory/
+│   ├── Azure SQL/
+│   └── Databricks Unity Catalog/
+│
+├── Dashboard Screenshots/           # Power BI dashboard and semantic model
+│   ├── Executive Summary Dashboard
+│   ├── Detailed Analysis Dashboard
+│   └── Power BI Semantic Model
+│
+├── Databricks/                      # PySpark notebooks and Unity Catalog SQL
 │   ├── Silver_Notebooks/
 │   │   ├── 01-Customers-Bronze-to-Silver
 │   │   ├── 02-Products-Bronze-to-Silver
@@ -53,14 +67,15 @@ The pipeline ingests four retail source files through a metadata-driven ADF fram
 │   │   ├── 08-Product-Dimension-Silver-to-Gold
 │   │   └── 09-Fact-Sales-Silver-to-Gold_Final
 │   │
-│   └── Gold_Delta_Notebooks/
-│       ├── 10-delta-dim-date
-│       ├── 11-delta-dim-customers
-│       ├── 12-delta-dim-products
-│       ├── 13-delta-dim-stores
-│       └── 14-delta-fact-sales
-│
-├── sql/                            # Unity Catalog external table registration scripts
+│   ├── Gold_Delta_Notebooks/
+│   │   ├── 10-delta-dim-date
+│   │   ├── 11-delta-dim-customers
+│   │   ├── 12-delta-dim-products
+│   │   ├── 13-delta-dim-stores
+│   │   └── 14-delta-fact-sales
+│   │
+│   └── SQL/
+│       └── Unity Catalog external table registration scripts
 │
 └── README.md
 ```
@@ -126,12 +141,39 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 * Verified inactive datasets are skipped without modifying the pipeline itself.
 
   
+* Metadata Table
+
+- Source file
+- Source folder
+- Target folder
+- Target filename
+- Target format
+- Load type
+- Is_Active flag
+
+
+**ADF Orchestration**
+
+Parent Pipeline
+    ↓
+Lookup
+    ↓
+ForEach
+    ↓
+Child Pipeline
+    ↓
+Incremental / Full Load
+
+
 ## 🚀 Sprint 3 – Azure SQL Metadata & Watermark Framework ✅
 
 * Created Azure SQL Server/Database and a `watermark_metadata` table for runtime metadata.
 * Configured the Azure SQL linked service and dataset in ADF.
 * Implemented dynamic watermark lookups for incremental loading.
 * Refactored the pipeline into a Parent–Child architecture using Execute Pipeline.
+* The parent pipeline orchestrates downstream Databricks transformations by invoking a Databricks Job Activity,
+  separating pipeline orchestration from notebook execution.
+ 
   
 ## 🚀 Sprint 4 – Bronze → Silver Transformation ✅
 
@@ -159,13 +201,15 @@ Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datas
 | Domain validation | 72,445 | 0 | 72,445 | `Payment_Method` / `Order_Status` enums clean |
 | **Final Silver output** | | **3,190 total rejected (4.2%)** | **72,445** | Enriched with `Gross_Price`, `Final_Price` |
 
+**Note:** The synthetic retail dataset intentionally includes invalid records (duplicates, orphaned foreign keys, missing mandatory values, and invalid numeric values) to validate the data-quality framework. Rejected records demonstrate rule enforcement and auditability rather than unexpected production data loss.
 
   
 ## 🚀 Sprint 5 – Silver → Gold Transformation ✅
 
 * `dim_customer`, `dim_store` — pass-through from Silver, re-validated (5,000 / 25 rows, 0 dupes).
 * `dim_product` — added `Price_Category` via quartile-based classification on `Product_Price` (Budget/Standard/Premium/Luxury, 250 products each).
-* `dim_date` — generated a full calendar (546 days) spanning the actual Sales date range, with `Date_Key`, Year, Quarter, Month, Week, Day, and `Is_Weekend`.
+* `dim_date` — generated dynamically from the minimum and maximum `Sale_DateTime` values in the Sales dataset (546 days). This guarantees complete date coverage for the fact table while avoiding unnecessary future dates. validated schema, duplicates, and referential integrity against Customer, Product, and Store dimensions (zero orphaned keys).
+* Date coverage was inherently guaranteed because `dim_date` was generated directly from the Sales date range.
 * `fact_sales` — built from Silver Sales (72,445 rows); validated schema, duplicates, and referential integrity against all four dimensions (**zero orphaned keys**). Derived `Date_Key`, `Discount_Percentage`, and `Discount_Flag` (72,162 discounted / 283 non-discounted transactions).
 
 
@@ -173,7 +217,7 @@ Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datas
 
 * Converted all 5 Gold Parquet datasets to Delta format in a dedicated `gold-delta` ADLS container.
 * Validated each migration: `_delta_log` structure present, row counts matched source Parquet exactly, schema consistent, sample records spot-checked.
-* Registered all 5 Delta tables as **external tables** in a Unity Catalog Gold schema:
+* Registered all 5 Delta tables as **external tables** in a Unity Catalog(adb_retail_lakeshouse_dev) schema(gold):
   - `dim_customer`, `dim_date`, `dim_product`, `dim_store`, `fact_sales`
 * Verified registration via `SHOW EXTERNAL LOCATIONS` and `SELECT` queries against the catalog.
 * Serving layer is ready for Power BI / downstream analytics consumption.
@@ -192,8 +236,37 @@ Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datas
 - Developed business-focused visualizations for sales performance, customer insights, product analysis, and store performance.
 - Optimized the report model for usability and analytical exploration.
 
+## Business KPIs
+
+The Power BI semantic model includes:
+
+- Total Sales
+- Total Orders
+- Average Order Value
+- Total Customers
+- Total Quantity Sold
+- Total Discount
+
+**Executive Dashboard**
+  <p align="center">
+  <img src="Dashboard Screenshots/Execitive Summary Dashboard.png" alt="Architecture">
+</p>
+
+**Detailed Summary Dashboard**
+  <p align="center">
+  <img src="Dashboard Screenshots/Detailed Summary Dashboard.png" alt="Architecture">
+</p>
+
+
 **Outcome:**
 - Successfully completed an end-to-end Azure Data Engineering solution, from data ingestion through transformation, governance, and business intelligence reporting.
+  
+- Power BI Dashboard built on
+
+- 72,445 fact rows
+- 5 dimensions
+- 30K Orders
+- 5.42 Billion Sales revenue( in INR)
 
 ---
 
