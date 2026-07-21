@@ -126,6 +126,7 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 | Sprint 5 | Silver → Gold Transformation | ✅ Completed |
 | Sprint 6 | Delta Lake & Unity Catalog | ✅ Completed |
 | Sprint 7 | Power BI Dashboard & Analytics | ✅ Completed |
+
 ---
 
 
@@ -274,8 +275,7 @@ The Power BI semantic model includes:
 </p>
 
 
-**Outcome:**
-- Successfully completed an end-to-end Azure Data Engineering solution, from data ingestion through transformation, governance, and business intelligence reporting.
+**Outcome:**  Successfully completed an end-to-end Azure Data Engineering solution, from data ingestion through transformation, governance, and business intelligence reporting.
   
 **The Power BI dashboard is built on 72,445 fact rows across 5 dimensions, covering 30K orders and ₹5.42 billion in sales revenue.**
 
