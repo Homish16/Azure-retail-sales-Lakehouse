@@ -140,8 +140,10 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 
 ## 🚀 Sprint 2 – Pipeline Control ✅
 
-* Implemented metadata-driven ingestion control using the `dataset_metadata` Azure SQL table.
-* Added an If Condition activity to dynamically include or skip datasets based on the `Is_Active` flag.
+* Migrated ingestion control to the dataset_metadata Azure SQL table.
+* Built a parent-child pipeline architecture using Execute Pipeline activities for reusable dataset processing.
+* Implemented metadata-driven dataset selection by filtering active datasets (Is_Active = 'Y') in the Azure SQL Lookup activity.
+* Parameterized the child pipeline to dynamically process different datasets without modifying pipeline logic.
 * Verified inactive datasets are skipped without modifying the pipeline logic.
 
 **Metadata Table (`dataset_metadata`)**
