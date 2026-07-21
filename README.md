@@ -1,13 +1,14 @@
-# Azure Retail Sales Lakehouse
+# Azure Retail Sales Lakehouse — Medallion Architecture with Delta Lake & Unity Catalog
 
-End-to-end Azure Data Engineering project implementing a **Retail Sales Lakehouse** on the **Medallion Architecture** (Bronze → Silver → Gold), built with Azure Data Factory, Azure Data Lake Storage Gen2, Azure Databricks, PySpark, Delta Lake, and Unity Catalog.
+Built to simulate a production-style Azure Data Engineering workflow, this project combines metadata-driven ingestion, a six-stage data quality validation framework, Medallion Architecture, Delta Lake, Unity Catalog governance, and Power BI analytics to deliver an end-to-end retail sales lakehouse.
+
 
 The pipeline ingests four retail source files through a metadata-driven ADF framework, applies schema enforcement and data-quality validation in PySpark, and publishes a **star schema** to a governed Gold layer, ready for BI consumption.
 
 **Why this design:**
 - **Medallion Architecture** separates raw ingestion (Bronze), validated and cleansed data (Silver), and analytics-ready data (Gold), giving each layer a clear responsibility while making data quality issues easier to isolate and troubleshoot.
 - **Metadata-driven ingestion** uses a configuration file to drive a parameterized Azure Data Factory pipeline (Lookup → ForEach → Copy), allowing new source tables to be onboarded through configuration rather than pipeline development.
-- **Delta Lake in the Gold layer** provides ACID transactions, schema enforcement, and time travel, making the analytics layer more reliable and production-ready for BI workloads.
+- **Delta Lake in the Gold layer** provides ACID transactions and schema enforcement, creating a reliable and governed serving layer for downstream analytics.
 - **Unity Catalog external tables** separate data governance from physical storage, enabling secure, governed access for Power BI and other consumers without exposing raw storage paths.
 
 ---
@@ -16,7 +17,7 @@ The pipeline ingests four retail source files through a metadata-driven ADF fram
 
 - Metadata-driven Azure Data Factory pipeline for configurable ingestion
 - End-to-end Medallion Architecture (Bronze → Silver → Gold)
-- Incremental loading using watermark-based processing
+- Watermark-based incremental ingestion at the Bronze layer
 - Data quality validation with rejected records and auditability
 - Star schema with dimension and fact tables
 - Delta Lake implementation with Unity Catalog governance
@@ -101,14 +102,16 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 
 ## 🛠️ Tech Stack
 
-* **Cloud Platform:** Microsoft Azure
-* **Storage:** Azure Data Lake Storage Gen2 (ADLS Gen2)
-* **Data Integration:** Azure Data Factory
-* **Processing:** Azure Databricks
-* **Languages:** PySpark, SQL
-* **Architecture:** Medallion Architecture (Bronze, Silver, Gold) + Star Schema
-* **Storage Formats:** CSV (Bronze), Parquet (Silver and initial Gold implementation), Delta Lake (refactored Gold implementation)
-* **Governance:** Unity Catalog (external tables, storage credentials, external locations)
+**Cloud Platform:** Microsoft Azure
+**Storage:** Azure Data Lake Storage Gen2 (ADLS Gen2)
+**Data Integration:** Azure Data Factory
+**Processing:** Azure Databricks
+**Languages:** PySpark, SQL
+**Architecture:** Medallion Architecture (Bronze, Silver, Gold) + Star Schema
+**Storage Formats:** CSV (Bronze), Parquet (Silver and initial Gold implementation), Delta Lake (refactored Gold implementation)
+**Governance:** Unity Catalog (external tables, storage credentials, external locations)
+
+**Note:** Silver is stored as Parquet. This project demonstrates Delta Lake and Unity Catalog governance at the Gold serving layer consumed by Power BI. In a production lakehouse, Delta Lake is commonly used for both Silver and Gold to provide ACID transactions, schema evolution, and improved support for reliable data management.
 
 ---
 
@@ -129,27 +132,29 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 ## 🚀 Sprint 1 – Metadata-Driven Ingestion ✅
 
 * Created ADLS Gen2 with Bronze, Silver, and Gold containers.
-* Designed a realistic retail dataset: Customers, Products, Stores, Sales, plus a metadata configuration file.
+* Designed realistic retail datasets (Customers, Products, Stores, and Sales) in CSV format.
+* Refactored the initial CSV-based metadata configuration (`ingestion_config.csv`) to an Azure SQL metadata table for centralized ingestion control.
 * Built a metadata-driven ADF pipeline using Lookup, ForEach, parameterized datasets, and Copy activities.
-* Ingested Bronze CSVs into ADLS Gen2 as the landing layer.
-
+* Ingested source data into the Bronze layer of ADLS Gen2 using metadata-driven orchestration.
 
 ## 🚀 Sprint 2 – Pipeline Control ✅
 
-* Implemented metadata-based file activation using an `Is_Active` flag.
-* Added an If Condition activity to dynamically include/skip datasets per run.
-* Verified inactive datasets are skipped without modifying the pipeline itself.
+* Implemented metadata-driven ingestion control using the `dataset_metadata` Azure SQL table.
+* Added an If Condition activity to dynamically include or skip datasets based on the `Is_Active` flag.
+* Verified inactive datasets are skipped without modifying the pipeline logic.
 
-  
-* Metadata Table
+**Metadata Table (`dataset_metadata`)**
 
-- Source file
-- Source folder
-- Target folder
-- Target filename
-- Target format
-- Load type
-- Is_Active flag
+| Column | Purpose |
+|--------|---------|
+| `Source_File_Name` | Source dataset filename |
+| `Source_Folder_Name` | Source folder location |
+| `Target_Folder` | Bronze destination folder |
+| `Target_File_Name` | Output filename |
+| `Target_Format` | Output file format |
+| `Load_Type` | Full or Incremental load |
+| `Is_Active` | Controls whether the dataset is processed |
+| `Notebook_Path` | Databricks notebook executed for downstream processing |
 
 
 **ADF Orchestration**
@@ -169,10 +174,11 @@ Incremental / Full Load
 
 * Created Azure SQL Server/Database and a `watermark_metadata` table for runtime metadata.
 * Configured the Azure SQL linked service and dataset in ADF.
-* Implemented dynamic watermark lookups for incremental loading.
+* Implemented watermark-based lookup logic in Azure Data Factory to identify records eligible for incremental ingestion at the Bronze layer.
 * Refactored the pipeline into a Parent–Child architecture using Execute Pipeline.
-* The parent pipeline orchestrates downstream Databricks transformations by invoking a Databricks Job Activity,
-  separating pipeline orchestration from notebook execution.
+* The parent pipeline orchestrates downstream Databricks transformations by invoking a Databricks Job Activity, separating pipeline orchestration from notebook execution.
+
+**Note:** This project implements watermark-based record selection for incremental ingestion at the Bronze layer. Automatic watermark persistence after a successful load—typically implemented using an ADF Stored Procedure Activity or Script Activity to update the `watermark_metadata` table—is not included in the current implementation. Silver and Gold transformations use full-refresh processing.
  
   
 ## 🚀 Sprint 4 – Bronze → Silver Transformation ✅
@@ -206,30 +212,34 @@ Transformed raw Bronze CSVs into validated, analytics-ready Silver Parquet datas
   
 ## 🚀 Sprint 5 – Silver → Gold Transformation ✅
 
-* `dim_customer`, `dim_store` — pass-through from Silver, re-validated (5,000 / 25 rows, 0 dupes).
-* `dim_product` — added `Price_Category` via quartile-based classification on `Product_Price` (Budget/Standard/Premium/Luxury, 250 products each).
-* `dim_date` — generated dynamically from the minimum and maximum `Sale_DateTime` values in the Sales dataset (546 days). This guarantees complete date coverage for the fact table while avoiding unnecessary future dates. validated schema, duplicates, and referential integrity against Customer, Product, and Store dimensions (zero orphaned keys).
-* Date coverage was inherently guaranteed because `dim_date` was generated directly from the Sales date range.
-* `fact_sales` — Built from Silver Sales (72,445 rows); validated schema, duplicates, and referential integrity against Customer, Product, and Store dimensions (zero orphaned keys). Derived `Date_Key`, `Discount_Percentage`, and `Discount_Flag` (72,162 discounted / 283 non-discounted transactions).
+* `dim_customer`, `dim_store` — pass-through from Silver, re-validated (5,000 / 25 rows, 0 duplicates).
+* `dim_product` — added `Price_Category` via quartile-based classification on `Product_Price` (Budget / Standard / Premium / Luxury, 250 products each).
+* `dim_date` — generated dynamically from the minimum and maximum `Sale_DateTime` values in the Sales dataset (546 days, 2025-01-01 → 2026-06-30). This approach guarantees complete date coverage for the fixed synthetic dataset while avoiding unnecessary future dates. In a production warehouse with continuously arriving data, the date dimension would typically be pre-generated to a fixed future horizon rather than derived from the current fact data.
+* `fact_sales` — built from Silver Sales (72,445 rows); validated schema, duplicates, and referential integrity against the Customer, Product, and Store dimensions (zero orphaned keys). Derived `Date_Key`, `Discount_Percentage`, and `Discount_Flag` (72,162 discounted / 283 non-discounted transactions).
 
 
 ## 🚀 Sprint 6 – Delta Lake & Unity Catalog ✅
 
 * Converted all 5 Gold Parquet datasets to Delta format in a dedicated `gold-delta` ADLS container.
 * Validated each migration: `_delta_log` structure present, row counts matched source Parquet exactly, schema consistent, sample records spot-checked.
-* Registered all 5 Delta tables as **external tables** in a Unity Catalog(adb_retail_lakeshouse_dev) schema(gold):
-  - `dim_customer`, `dim_date`, `dim_product`, `dim_store`, `fact_sales`
-* Verified registration via `SHOW EXTERNAL LOCATIONS` and `SELECT` queries against the catalog.
+* Created the `gold` schema in the Unity Catalog `adb_retail_lakehouse_dev` catalog.
+* Registered all 5 Delta datasets as external Delta tables:
+  - `dim_customer`
+  - `dim_date`
+  - `dim_product`
+  - `dim_store`
+  - `fact_sales`
+* Verified successful registration by querying the external tables and inspecting their metadata using `SELECT`, `DESCRIBE TABLE EXTENDED`, and `DESCRIBE HISTORY`.
 * Serving layer is ready for Power BI / downstream analytics consumption.
 
 ---
 
-### Sprint 7 – Power BI Dashboard & Analytics
+## 🚀 Sprint 7 – Power BI Dashboard & Analytics ✅
 
 **Objective:** Build an interactive business intelligence dashboard on top of the curated Gold layer to demonstrate end-to-end analytics.
 
 **Key Deliverables:**
-- Connected Power BI to the curated Gold layer.
+- Connected Power BI to Unity Catalog external tables through a Databricks SQL Warehouse, providing governed access to the curated Gold layer.
 - Built a star schema-based semantic model using fact and dimension tables.
 - Created DAX measures for key business KPIs.
 - Designed an interactive dashboard with slicers, filters, and drill-down capabilities.
@@ -249,24 +259,19 @@ The Power BI semantic model includes:
 
 **Executive Dashboard**
   <p align="center">
-  <img src="Dashboard Screenshots/Execitive Summary Dashboard.png" alt="Architecture">
+  <img src="Dashboard Screenshots/Executive Summary Dashboard.png" alt="Executive Summary Dashboard">
 </p>
 
 **Detailed Summary Dashboard**
   <p align="center">
-  <img src="Dashboard Screenshots/Detailed Summary Dashboard.png" alt="Architecture">
+  <img src="Dashboard Screenshots/Detailed Summary Dashboard.png" alt="Detailed Summary Dashboard">
 </p>
 
 
 **Outcome:**
 - Successfully completed an end-to-end Azure Data Engineering solution, from data ingestion through transformation, governance, and business intelligence reporting.
   
-- Power BI Dashboard built on
-
-- 72,445 fact rows
-- 5 dimensions
-- 30K Orders
-- 5.42 Billion Sales revenue( in INR)
+**The Power BI dashboard is built on 72,445 fact rows across 5 dimensions, covering 30K orders and ₹5.42 billion in sales revenue.**
 
 ---
 
