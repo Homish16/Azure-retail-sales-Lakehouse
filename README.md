@@ -102,14 +102,14 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 
 ## 🛠️ Tech Stack
 
-**Cloud Platform:** Microsoft Azure
-**Storage:** Azure Data Lake Storage Gen2 (ADLS Gen2)
-**Data Integration:** Azure Data Factory
-**Processing:** Azure Databricks
-**Languages:** PySpark, SQL
-**Architecture:** Medallion Architecture (Bronze, Silver, Gold) + Star Schema
-**Storage Formats:** CSV (Bronze), Parquet (Silver and initial Gold implementation), Delta Lake (refactored Gold implementation)
-**Governance:** Unity Catalog (external tables, storage credentials, external locations)
+* **Cloud Platform:** Microsoft Azure
+* **Storage:** Azure Data Lake Storage Gen2 (ADLS Gen2)
+* **Data Integration:** Azure Data Factory
+* **Processing:** Azure Databricks
+* **Languages:** PySpark, SQL
+* **Architecture:** Medallion Architecture (Bronze, Silver, Gold) + Star Schema
+* **Storage Formats:** CSV (Bronze), Parquet (Silver and initial Gold implementation), Delta Lake (refactored Gold implementation)
+* **Governance:** Unity Catalog (external tables, storage credentials, external locations)
 
 **Note:** Silver is stored as Parquet. This project demonstrates Delta Lake and Unity Catalog governance at the Gold serving layer consumed by Power BI. In a production lakehouse, Delta Lake is commonly used for both Silver and Gold to provide ACID transactions, schema evolution, and improved support for reliable data management.
 
@@ -159,15 +159,21 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 
 **ADF Orchestration**
 
+```text
 Parent Pipeline
-    ↓
+        │
+        ▼
 Lookup
-    ↓
+        │
+        ▼
 ForEach
-    ↓
+        │
+        ▼
 Child Pipeline
-    ↓
+        │
+        ▼
 Incremental / Full Load
+```
 
 
 ## 🚀 Sprint 3 – Azure SQL Metadata & Watermark Framework ✅
