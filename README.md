@@ -120,7 +120,7 @@ All four dimension keys were validated with zero orphaned foreign keys in `fact_
 | Sprint | Focus | Status |
 |---|---|---|
 | Sprint 1 | Metadata-Driven Ingestion | ✅ Completed |
-| Sprint 2 | Pipeline Control (Incremental Loading) | ✅ Completed |
+| Sprint 2 | Pipeline Control & Metadata-Driven Activation | ✅ Completed |
 | Sprint 3 | Azure SQL Metadata & Watermark Framework | ✅ Completed |
 | Sprint 4 | Bronze → Silver Transformation | ✅ Completed |
 | Sprint 5 | Silver → Gold Transformation | ✅ Completed |
